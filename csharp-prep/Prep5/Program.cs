@@ -44,3 +44,4 @@ class Program
         Console.WriteLine($"{userName}, the square of your number is {squaredNumber}");
     }
 }
+
