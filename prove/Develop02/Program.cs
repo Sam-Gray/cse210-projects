@@ -131,7 +131,7 @@ class Program
                     Console.Write("Your response: ");
                     string response = Console.ReadLine();
 
-                    Console.Write("Enter your location: ");
+                    Console.Write("Where are you today: ");
                     string location = Console.ReadLine();
 
                     Console.Write("Enter your mood: ");
