@@ -70,7 +70,6 @@ class Journal
 
     public void LoadFromFile(string filename)
     {
-        entries.Clear();
         using (StreamReader reader = new StreamReader(filename))
         {
             while (!reader.EndOfStream)
@@ -147,7 +146,16 @@ class Program
                     {
                         Console.Write("Why is that? ");
                         string ratingResponse = Console.ReadLine();
-                        journal.AddEntry(prompt, $"{response}\n{ratingResponse}", DateTime.Now.ToString(), "", "", 0);
+                        int rating;
+                        while (!int.TryParse(ratingResponse, out rating) || rating < 1 || rating > 5)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Write("Invalid rating. Please enter a number between 1 and 5: ");
+                            Console.ResetColor();
+                            ratingResponse = Console.ReadLine();
+                        }
+
+                        journal.AddEntry(prompt, $"{response}\n{ratingResponse}", DateTime.Now.ToString(), "", "", rating);
                     }
                     else
                     {
