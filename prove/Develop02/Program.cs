@@ -52,7 +52,7 @@ class Journal
         string result = "";
         foreach (var entry in entries)
         {
-            result += entry.ToString() + new string('-', 50) + "\n"; // Add a line separator for better readability
+            result += entry.ToString() + new string('-', 50) + "\n\n"; // Add extra newline for better spacing
         }
         return result;
     }
@@ -70,21 +70,13 @@ class Journal
 
     public void LoadFromFile(string filename)
     {
+        entries.Clear();
         using (StreamReader reader = new StreamReader(filename))
         {
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine().Split(',');
-
-                if (line.Length == 6 && !string.IsNullOrEmpty(line[5]))
-                {
-                    AddEntry(line[1], line[2], line[0], line[3], line[4], int.Parse(line[5]));
-                }
-                else
-                {
-                    // Handle the case where the rating is missing or empty
-                    Console.WriteLine($"Skipping invalid entry: {string.Join(",", line)}");
-                }
+                AddEntry(line[1], line[2], line[0], line[3], line[4], int.Parse(line[5]));
             }
         }
     }
@@ -138,29 +130,22 @@ class Program
 
                     Console.Write("Your response: ");
                     string response = Console.ReadLine();
+
+                    Console.Write("Enter your location: ");
+                    string location = Console.ReadLine();
+
+                    Console.Write("Enter your mood: ");
+                    string mood = Console.ReadLine();
+
+                    Console.Write("Rate your day (1-5): ");
+                    int rating = int.Parse(Console.ReadLine());
+
+                    journal.AddEntry(prompt, response, DateTime.Now.ToString(), location, mood, rating);
+
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine(GetEncouragementStatement());
+                    Console.WriteLine(GetEncouragementMessage(rating));
+                    Console.WriteLine(GetSmileyFace(rating));
                     Console.ResetColor();
-
-                    if (prompt.StartsWith("Rate your day"))
-                    {
-                        Console.Write("Why is that? ");
-                        string ratingResponse = Console.ReadLine();
-                        int rating;
-                        while (!int.TryParse(ratingResponse, out rating) || rating < 1 || rating > 5)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.Write("Invalid rating. Please enter a number between 1 and 5: ");
-                            Console.ResetColor();
-                            ratingResponse = Console.ReadLine();
-                        }
-
-                        journal.AddEntry(prompt, $"{response}\n{ratingResponse}", DateTime.Now.ToString(), "", "", rating);
-                    }
-                    else
-                    {
-                        journal.AddEntry(prompt, response, DateTime.Now.ToString(), "", "", 0);
-                    }
                     break;
 
                 case 2:
@@ -231,17 +216,34 @@ class Program
         return prompts[index];
     }
 
-    static string GetEncouragementStatement()
+    static string GetEncouragementMessage(int rating)
     {
-        string[] statements = {
-            "Thanks for sharing!",
-            "That's great! Keep it up!",
-            "Very thoughtful!",
-            "Reflect on your day.",
-        };
+        if (rating > 3)
+        {
+            return "That's great! Keep up the positive vibes!";
+        }
+        else
+        {
+            return "Why is that? Reflect on your day and find ways to improve.";
+        }
+    }
 
-        Random random = new Random();
-        int index = random.Next(statements.Length);
-        return statements[index];
+    static string GetSmileyFace(int rating)
+    {
+        switch (rating)
+        {
+            case 1:
+                return ":( Sad day!";
+            case 2:
+                return ":| Not bad, but could be better.";
+            case 3:
+                return ":) Decent day!";
+            case 4:
+                return ":D Good day!";
+            case 5:
+                return ":) :D Fantastic day!";
+            default:
+                return "";
+        }
     }
 }
