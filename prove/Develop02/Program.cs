@@ -131,11 +131,7 @@ class Program
                     Console.Write("Your response: ");
                     string response = Console.ReadLine();
 
-<<<<<<< HEAD
-                    Console.Write("Where are you today: ");
-=======
                     Console.Write("Where are you today?: ");
->>>>>>> 3690fe5 (Finished W02 Prove Project)
                     string location = Console.ReadLine();
 
                     Console.Write("Enter your mood: ");
