@@ -58,18 +58,16 @@ class Program
 {
     static void Main()
     {
+        Console.WriteLine("Choose a Scripture:");
         var scriptures = new List<Scripture>
         {
-            new Scripture(new Reference("John 3:16"), "For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life."),
-            new Scripture(new Reference("Proverbs 3:5-6"), "Trust in the Lord with all your heart, and do not lean on your own understanding. In all your ways acknowledge him, and he will make straight your paths."),
-            new Scripture(new Reference("Psalm 23:1"), "The Lord is my shepherd; I shall not want."),
+            new Scripture(new Reference("1 Nephi 3:7"), "“And it came to pass that I, Nephi, said unto my father: I will go and do the things which the Lord hath commanded, for I know that the Lord giveth no commandments unto the children of men, save he shall prepare a way for them that they may accomplish the thing which he commandeth them.”
+
+"),
+            new Scripture(new Reference("Proverbs 3:5-6"), "Trust in the Lord with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths."),
+            new Scripture(new Reference("Mosiah 2:17"), "when ye are in the service of your fellow beings ye are only in the service of your God."),
         };
 
-        Console.WriteLine("Choose a Scripture:");
-        for (int i = 0; i < scriptures.Count; i++)
-        {
-            Console.WriteLine($"{i + 1}. {scriptures[i].Reference.ReferenceText}");
-        }
         Console.WriteLine($"{scriptures.Count + 1}. Add your own verse");
 
         int selectedOption;
@@ -83,10 +81,11 @@ class Program
             Console.WriteLine("Invalid choice. Please enter a valid number.");
         }
 
-        Scripture selectedScripture;
+        int wordsToHideCount = 2; // Default number of words to hide
         if (selectedOption <= scriptures.Count)
         {
-            selectedScripture = scriptures[selectedOption - 1];
+            Console.Write($"Enter the number of words to disappear each time (default is {wordsToHideCount}): ");
+            int.TryParse(Console.ReadLine(), out wordsToHideCount);
         }
         else
         {
@@ -95,10 +94,12 @@ class Program
             Console.Write("Enter the text for your verse: ");
             var verseText = Console.ReadLine();
             var userReference = new Reference(referenceText);
-            selectedScripture = new Scripture(userReference, verseText);
-            scriptures.Add(selectedScripture);
+            var userScripture = new Scripture(userReference, verseText);
+            scriptures.Add(userScripture);
         }
 
+        // Exceeding requirements:
+        // - Added an option for the user to pick the number of words that disappear each time.
         while (selectedScripture.Words.Any(word => !word.Hidden))
         {
             selectedScripture.Display();
@@ -110,7 +111,7 @@ class Program
                 break;
             }
 
-            selectedScripture.HideRandomWords(new Random().Next(1, 4));
+            selectedScripture.HideRandomWords(wordsToHideCount);
         }
 
         Console.WriteLine("Program ended.");
