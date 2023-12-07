@@ -1,0 +1,3 @@
+SimpleGoal,Read,20
+ChecklistGoal,Read Daily,20,5
+EternalGoal,Read Scriptures Daily,200
