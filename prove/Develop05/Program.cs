@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 class Goal
 {
@@ -13,12 +14,17 @@ class Goal
         Points = points;
     }
 
-    public virtual void DisplayProgress()
+    public virtual void DisplayProgress(int index)
     {
-        Console.WriteLine($"Name: {Name}\nPoints: {Points}");
+        Console.WriteLine($"{index + 1}. Name: {Name}\n   Points: {Points}");
     }
 
     public virtual void RecordEvent()
+    {
+        Console.WriteLine($"Event recorded for {Name}! +{Points} points");
+    }
+
+    public virtual void RecordEvent(ref int userPoints)
     {
         Console.WriteLine($"Event recorded for {Name}! +{Points} points");
     }
@@ -26,8 +32,25 @@ class Goal
 
 class SimpleGoal : Goal
 {
+    private bool isCompleted;
+
     public SimpleGoal(string name, int points) : base(name, points)
     {
+        isCompleted = false;
+    }
+
+    public override void RecordEvent(ref int userPoints)
+    {
+        if (!isCompleted)
+        {
+            Console.WriteLine($"Event recorded for {Name}! +{Points} points (Simple Goal)");
+            isCompleted = true;
+            userPoints += Points; // Increment user points only if the goal is completed for the first time
+        }
+        else
+        {
+            Console.WriteLine($"{Name} has already been completed and cannot be completed again.");
+        }
     }
 }
 
@@ -42,25 +65,70 @@ class ChecklistGoal : Goal
         CompletedItems = 0;
     }
 
+    private bool isFinalIteration = false;
+
+
     public void MarkItemComplete()
     {
         if (CompletedItems < TotalItems)
         {
             CompletedItems++;
-            Points += 2; // Bonus points for completing checklist item
+
+            if (CompletedItems == TotalItems)
+            {
+                isFinalIteration = true;
+                ApplyBonusPoints(); // Apply bonus points for the final iteration
+            }
+            //else
+            //{
+            //    Points += 2; // Bonus points for completing a non-final iteration
+            //}
         }
     }
 
-    public override void DisplayProgress()
+    private void ApplyBonusPoints()
     {
-        Console.WriteLine($"Name: {Name}\nPoints: {Points}");
-        Console.WriteLine($"Progress: [{new string('X', CompletedItems)}{new string(' ', TotalItems - CompletedItems)}]");
+        Console.Write($"Do you want to apply bonus points for completing the final iteration of {Name}? (yes/no): ");
+        string response = Console.ReadLine().ToLower();
+
+        if (response == "yes")
+        {
+            Console.Write("Enter bonus points for the final iteration: ");
+            int bonusPoints;
+            while (!int.TryParse(Console.ReadLine(), out bonusPoints) || bonusPoints < 0)
+            {
+                Console.Write("Invalid bonus points. Please enter a non-negative integer: ");
+            }
+
+            Points += bonusPoints;
+            Console.WriteLine($"Bonus points applied! Total points for {Name}: {Points}");
+        }
+    }
+        
+    
+
+    public override void DisplayProgress(int index)
+    {
+        Console.WriteLine($"{index + 1}. Name: {Name}\n   Points: {Points}");
+        Console.WriteLine($"   Progress: [{new string('X', CompletedItems)}{new string('.', TotalItems - CompletedItems)}] {CompletedItems}/{TotalItems}");
     }
 
     public override void RecordEvent()
     {
         Console.WriteLine($"Event recorded for {Name}! +{Points} points (Checklist Goal)");
+        MarkItemComplete();
+
+        // Simple animation for fireworks
+        for (int i = 0; i < 5; i++)
+        {
+            Console.Clear();
+            Console.WriteLine("Fireworks!");
+            Console.WriteLine("".PadLeft(i * 2, ' ') + "*");
+            Console.WriteLine("".PadLeft(i, ' ') + "|");
+            Thread.Sleep(300);
+        }
     }
+
 }
 
 class EternalGoal : Goal
@@ -69,15 +137,18 @@ class EternalGoal : Goal
     {
     }
 
-    public override void RecordEvent()
+    public override void RecordEvent(ref int userPoints)
     {
         Console.WriteLine($"Event recorded for {Name}! +{Points} points (Eternal Goal)");
+        userPoints += Points; // Increment user points every time the goal is recorded
     }
 }
+
 
 class Program
 {
     static List<Goal> goals = new List<Goal>();
+    static int userPoints = 0;
 
     static void Main()
     {
@@ -103,28 +174,36 @@ class Program
                 case 4:
                     SaveGoals();
                     break;
+                case 5:
+                    DisplayGoalsProgress();
+                    break;
+                case 6:
+                    RecordEvent(ref userPoints);
+                    break;
             }
-        } while (choice != 5);
+        } while (choice != 7);
     }
 
     static void DisplayMainMenu()
     {
         Console.Clear();
-        Console.WriteLine("Eternal Quest Program");
+        Console.WriteLine($"Eternal Quest Program - Total Points: {userPoints}");
         Console.WriteLine("1. Add a Simple Goal");
         Console.WriteLine("2. Add a Checklist Goal");
         Console.WriteLine("3. Add an Eternal Goal");
         Console.WriteLine("4. Save Goals");
-        Console.WriteLine("5. Quit");
+        Console.WriteLine("5. Display Goals Progress");
+        Console.WriteLine("6. Record Goal Progress");
+        Console.WriteLine("7. Quit");
         Console.Write("Enter your choice: ");
     }
 
     static int GetChoice()
     {
         int choice;
-        while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > 5)
+        while (!int.TryParse(Console.ReadLine(), out choice) || choice < 1 || choice > 7)
         {
-            Console.Write("Invalid choice. Please enter a number between 1 and 5: ");
+            Console.Write("Invalid choice. Please enter a number between 1 and 7: ");
         }
         return choice;
     }
@@ -165,7 +244,7 @@ class Program
             Console.Write("Invalid total items. Please enter a positive integer: ");
         }
 
-        Console.Write("Enter points for the goal: ");
+        Console.Write("Enter points for each completion of this goal: ");
         int points;
         while (!int.TryParse(Console.ReadLine(), out points) || points < 1)
         {
@@ -173,6 +252,7 @@ class Program
         }
 
         goals.Add(new ChecklistGoal(name, points, totalItems));
+        //userPoints += points; // Increment user points
 
         Console.WriteLine("Goal added successfully!");
         Console.ReadKey();
@@ -194,10 +274,60 @@ class Program
         }
 
         goals.Add(new EternalGoal(name, points));
-
+        
         Console.WriteLine("Goal added successfully!");
         Console.ReadKey();
     }
+
+    static void DisplayGoalsProgress()
+    {
+        Console.Clear();
+        Console.WriteLine("Goals Progress");
+
+        for (int i = 0; i < goals.Count; i++)
+        {
+            goals[i].DisplayProgress(i);
+            Console.WriteLine();
+        }
+
+        Console.ReadKey();
+    }
+
+    static void RecordEvent(ref int userPoints)
+{
+    Console.Clear();
+    Console.WriteLine("Record Goal Progress");
+
+    DisplayGoalsProgress();
+
+    Console.Write("Enter the number of the goal to record progress on: ");
+    if (int.TryParse(Console.ReadLine(), out int number) && number >= 1 && number <= goals.Count)
+    {
+        Goal selectedGoal = goals[number - 1];
+
+        // Check the type of the goal and call the appropriate RecordEvent method
+        if (selectedGoal is SimpleGoal simpleGoal)
+        {
+            simpleGoal.RecordEvent(ref userPoints);
+        }
+        else if (selectedGoal is EternalGoal eternalGoal)
+        {
+            eternalGoal.RecordEvent(ref userPoints);
+        }
+        else
+        {
+            // For other types of goals, call the general RecordEvent method
+            selectedGoal.RecordEvent();
+            userPoints += selectedGoal.Points;
+        }
+    }
+    else
+    {
+        Console.WriteLine("Invalid number. Please enter a valid number.");
+    }
+
+    Console.ReadKey();
+}
 
     static void SaveGoals()
     {
@@ -244,13 +374,16 @@ class Program
                     {
                         case nameof(SimpleGoal):
                             goals.Add(new SimpleGoal(name, points));
+                            userPoints += points; // Increment user points
                             break;
                         case nameof(ChecklistGoal):
                             int totalItems = int.Parse(goalData[3]);
                             goals.Add(new ChecklistGoal(name, points, totalItems));
+                            userPoints += points; // Increment user points
                             break;
                         case nameof(EternalGoal):
                             goals.Add(new EternalGoal(name, points));
+                            userPoints += points; // Increment user points
                             break;
                     }
                 }
